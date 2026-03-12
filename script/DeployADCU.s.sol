@@ -10,10 +10,10 @@ contract DeployADCU is Script {
     address[] public tokenAdresses;
     address[] public priceFeedAddresses;
 
-    function run() external returns(StableCoin, ADCUEngine, HelperConfig) {
+    function run() external returns (StableCoin, ADCUEngine, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
-        (address wETHUSDPriceFeed, address wBTCUSDPriceFeed, address wETH, address wBTC, uint deployerKey)
-        = helperConfig.activeNetwork();
+        (address wETHUSDPriceFeed, address wBTCUSDPriceFeed, address wETH, address wBTC, uint256 deployerKey) =
+            helperConfig.activeNetwork();
 
         tokenAdresses = [wETH, wBTC];
         priceFeedAddresses = [wETHUSDPriceFeed, wBTCUSDPriceFeed];
@@ -24,6 +24,5 @@ contract DeployADCU is Script {
         adcu.transferOwnership(address(engine));
         vm.stopBroadcast();
         return (adcu, engine, helperConfig);
-
     }
 }

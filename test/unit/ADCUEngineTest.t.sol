@@ -9,7 +9,6 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {ERC20Mock} from "test/mocks/ERC20Mock.sol";
 import {MockV3Aggregator} from "test/mocks/MockV3Aggregator.sol";
 
-
 contract ADCUEngineTest is Test {
     // The test contract for ADCUEngine will be implemented here.
     // This is a placeholder for the actual test code.
@@ -28,14 +27,14 @@ contract ADCUEngineTest is Test {
 
     address public USER = makeAddr("user");
     address public LIQUIDATOR = makeAddr("liquidator");
-    uint public constant DEFAULT_COLLATERAL_AMOUNT = 1 ether;
-    uint public constant INITIAL_WETH_BALANCE = 10 ether;
-    uint public constant MINT_AMOUNT = 500 ether;
+    uint256 public constant DEFAULT_COLLATERAL_AMOUNT = 1 ether;
+    uint256 public constant INITIAL_WETH_BALANCE = 10 ether;
+    uint256 public constant MINT_AMOUNT = 500 ether;
 
     function setUp() public {
         deployer = new DeployADCU();
-        (adcu, engine, config) = deployer.run(); 
-        (ETHUSDPriceFeed, BTCUSDPriceFeed, WETH, WBTC, ) = config.activeNetwork();
+        (adcu, engine, config) = deployer.run();
+        (ETHUSDPriceFeed, BTCUSDPriceFeed, WETH, WBTC,) = config.activeNetwork();
 
         ERC20Mock(WETH).mint(USER, INITIAL_WETH_BALANCE);
         ERC20Mock(WETH).mint(LIQUIDATOR, INITIAL_WETH_BALANCE); // Mint some WETH for the user
@@ -71,7 +70,7 @@ contract ADCUEngineTest is Test {
     }
 
     //Deposit collateral tests
-    function testCollateralIsZero() public{
+    function testCollateralIsZero() public {
         vm.startPrank(USER);
         ERC20Mock(WETH).approve(address(engine), DEFAULT_COLLATERAL_AMOUNT);
         vm.expectRevert(ADCUEngine.ADCUEngine__AmountIsZero.selector);
@@ -87,7 +86,7 @@ contract ADCUEngineTest is Test {
         vm.stopPrank();
     }
 
-    modifier depositedCollateral(){
+    modifier depositedCollateral() {
         vm.startPrank(USER);
         ERC20Mock(WETH).approve(address(engine), DEFAULT_COLLATERAL_AMOUNT);
         engine.depositCollateral(WETH, DEFAULT_COLLATERAL_AMOUNT);
@@ -99,11 +98,10 @@ contract ADCUEngineTest is Test {
         (uint256 totalADCUMinted, uint256 collateralValueInUSD) = engine.getAccountInformation(USER);
         assertEq(totalADCUMinted, 0);
         assertEq(DEFAULT_COLLATERAL_AMOUNT, engine.getTokenAmountFromUSD(WETH, collateralValueInUSD));
-       
     }
 
     /// ---------------------- MINT TESTS ----------------------
-    
+
     function testCannotMintWithoutCollateral() public {
         vm.startPrank(USER);
         vm.expectRevert(abi.encodeWithSelector(ADCUEngine.ADCUEngine__NeedMoreCollateral.selector, 0));
@@ -118,10 +116,10 @@ contract ADCUEngineTest is Test {
         vm.stopPrank();
     }
 
-     function testCanMintWithEnoughCollateral() public depositedCollateral {
+    function testCanMintWithEnoughCollateral() public depositedCollateral {
         vm.startPrank(USER);
         engine.mintADCU(MINT_AMOUNT);
-        (uint256 totalMinted, ) = engine.getAccountInformation(USER);
+        (uint256 totalMinted,) = engine.getAccountInformation(USER);
         assertEq(totalMinted, MINT_AMOUNT, "Mint amount incorrect");
         vm.stopPrank();
     }
@@ -155,7 +153,7 @@ contract ADCUEngineTest is Test {
         engine.mintADCU(MINT_AMOUNT);
         adcu.approve(address(engine), MINT_AMOUNT);
         engine.burnADCU(MINT_AMOUNT / 2);
-        (uint256 totalMinted, ) = engine.getAccountInformation(USER);
+        (uint256 totalMinted,) = engine.getAccountInformation(USER);
         assertEq(totalMinted, MINT_AMOUNT / 2, "Burn failed");
         vm.stopPrank();
     }
@@ -179,7 +177,7 @@ contract ADCUEngineTest is Test {
         engine.depositCollateral(WETH, DEFAULT_COLLATERAL_AMOUNT * 3);
         engine.mintADCU(MINT_AMOUNT);
         adcu.approve(address(engine), MINT_AMOUNT);
-        engine.liquidate(WETH, USER, MINT_AMOUNT/2);
+        engine.liquidate(WETH, USER, MINT_AMOUNT / 2);
         vm.stopPrank();
     }
 
@@ -195,10 +193,6 @@ contract ADCUEngineTest is Test {
     }
 
     function dropPriceFeed() internal {
-        
         MockV3Aggregator(ETHUSDPriceFeed).updateAnswer(900e8); // Drops the price from 1900 to 700 USD
     }
-
-
-        
 }

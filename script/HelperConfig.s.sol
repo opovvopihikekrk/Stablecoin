@@ -5,9 +5,8 @@ import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "test/mocks/MockV3Aggregator.sol";
 import {ERC20Mock} from "test/mocks/ERC20Mock.sol";
 
-
-contract HelperConfig is Script{
-    struct NetworkConfig{
+contract HelperConfig is Script {
+    struct NetworkConfig {
         address wETHUSDPriceFeed;
         address wBTCUSDPriceFeed;
         address wETH;
@@ -22,16 +21,16 @@ contract HelperConfig is Script{
     NetworkConfig public activeNetwork;
 
     constructor() {
-        if(block.chainid == 11155111){
+        if (block.chainid == 11155111) {
             activeNetwork = getSepoliaEthConfig();
-        } else if(block.chainid == 31337){
+        } else if (block.chainid == 31337) {
             activeNetwork = getOrCreateAnvilConfig();
         } else {
             revert("No config for this chain id");
         }
     }
 
-    function getSepoliaEthConfig() public view returns (NetworkConfig memory){
+    function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
         return NetworkConfig({
             wETHUSDPriceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
             wBTCUSDPriceFeed: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
@@ -41,8 +40,8 @@ contract HelperConfig is Script{
         });
     }
 
-    function getOrCreateAnvilConfig() public returns (NetworkConfig memory){
-        if(activeNetwork.wBTCUSDPriceFeed != address(0)){
+    function getOrCreateAnvilConfig() public returns (NetworkConfig memory) {
+        if (activeNetwork.wBTCUSDPriceFeed != address(0)) {
             return activeNetwork;
         }
 
@@ -59,7 +58,5 @@ contract HelperConfig is Script{
             wBTC: address(wbtcMock),
             deployerKey: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 // Default Anvil key
         });
-
     }
-
 }

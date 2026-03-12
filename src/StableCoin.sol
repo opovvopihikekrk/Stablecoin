@@ -10,37 +10,35 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * Collateral: WETH & WBTC
  * Minting: Algorithmic
  * Stability: Pegged to USD
- * 
+ *
  * This is the contract meant to be governed by ADCUEngine. This contract is just the ERC20 implementation
  * of the stablecoin system
-*/
+ */
 
-contract StableCoin is ERC20Burnable, Ownable{
+contract StableCoin is ERC20Burnable, Ownable {
     error StableCoin__AmountIsZero();
     error StableCoin__NotEnoughFunds();
     error StableCoin__ToZeroAddress();
 
-    constructor() ERC20("Algorithmic Decentralized Collaterlalized USD", "ADCU") Ownable(){
+    constructor() ERC20("Algorithmic Decentralized Collaterlalized USD", "ADCU") Ownable() {}
 
-    }
+    function burn(uint256 _amount) public override onlyOwner {
+        uint256 balance = balanceOf(msg.sender);
 
-    function burn(uint _amount) public override onlyOwner{
-        uint balance = balanceOf(msg.sender);
-
-        if(_amount <= 0) {
+        if (_amount <= 0) {
             revert StableCoin__AmountIsZero();
         }
-        if(balance < _amount){
+        if (balance < _amount) {
             revert StableCoin__NotEnoughFunds();
         }
         super.burn(_amount);
     }
 
-    function mint (address _to, uint _amount) external onlyOwner returns(bool){
-        if(_to == address(0)){
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
+        if (_to == address(0)) {
             revert StableCoin__ToZeroAddress();
         }
-        if (_amount <= 0){
+        if (_amount <= 0) {
             revert StableCoin__AmountIsZero();
         }
         _mint(_to, _amount);

@@ -127,7 +127,9 @@ contract ADCUEngine is ReentrancyGuard {
      * @param amountADCUToBurn The amount of ADCU to burn.
      * @notice this function will burn the ADCU and redeem the collateral in one transaction.
      */
-    function redeemCollateralForADCU(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountADCUToBurn) external {
+    function redeemCollateralForADCU(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountADCUToBurn)
+        external
+    {
         burnADCU(amountADCUToBurn);
         redeemCollateral(tokenCollateralAddress, amountCollateral);
     }
@@ -159,7 +161,7 @@ contract ADCUEngine is ReentrancyGuard {
         }
     }
 
-    function burnADCU(uint256 amount) public moreThanZero(amount){
+    function burnADCU(uint256 amount) public moreThanZero(amount) {
         _burnADCU(msg.sender, msg.sender, amount);
         _revertIfHealthFactorIsBroken(msg.sender); //Might be removed
     }
@@ -173,9 +175,13 @@ contract ADCUEngine is ReentrancyGuard {
      * @notice The liquidator will get a liquidation bonus
      * @notice This function assumes that the protocol is overcollateralized
      */
-    function liquidate(address collateral, address user, uint256 debtToCover) external moreThanZero(debtToCover) nonReentrant{
+    function liquidate(address collateral, address user, uint256 debtToCover)
+        external
+        moreThanZero(debtToCover)
+        nonReentrant
+    {
         uint256 initialHealthFactor = _healthFactor(user);
-        if(initialHealthFactor >= MIN_HEALTH_FACTOR) {
+        if (initialHealthFactor >= MIN_HEALTH_FACTOR) {
             revert ADCUEngine__HealthFactorOK();
         }
         uint256 tokenAmountFromDebtCovered = getTokenAmountFromUSD(collateral, debtToCover);
@@ -185,7 +191,7 @@ contract ADCUEngine is ReentrancyGuard {
         _burnADCU(user, msg.sender, debtToCover);
 
         uint256 endingHealthFactor = _healthFactor(user);
-        if(endingHealthFactor < MIN_HEALTH_FACTOR) {
+        if (endingHealthFactor < MIN_HEALTH_FACTOR) {
             revert ADCUEngine__HealthFactorNotImproved();
         }
         _revertIfHealthFactorIsBroken(msg.sender);
@@ -218,7 +224,9 @@ contract ADCUEngine is ReentrancyGuard {
         }
     }
 
-    function _redeemCollateral(address tokenCollateralAddress, uint256 amountCollateral, address from, address to) private {
+    function _redeemCollateral(address tokenCollateralAddress, uint256 amountCollateral, address from, address to)
+        private
+    {
         s_collateralDeposited[from][tokenCollateralAddress] -= amountCollateral;
         emit CollateralRedeemed(from, to, tokenCollateralAddress, amountCollateral);
         bool success = IERC20(tokenCollateralAddress).transfer(to, amountCollateral);
@@ -264,7 +272,7 @@ contract ADCUEngine is ReentrancyGuard {
         return _getAccountInformation(user);
     }
 
-    function getHealthFactor(address user) external view returns(uint){
+    function getHealthFactor(address user) external view returns (uint256) {
         return _healthFactor(user);
     }
 
@@ -275,6 +283,7 @@ contract ADCUEngine is ReentrancyGuard {
     function getCollateralDeposited(address user, address token) external view returns (uint256) {
         return s_collateralDeposited[user][token];
     }
+
     function getPriceFeed(address token) external view returns (address) {
         return s_priceFeeds[token];
     }
