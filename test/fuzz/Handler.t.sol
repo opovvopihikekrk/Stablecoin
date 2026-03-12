@@ -56,10 +56,10 @@ contract Handler is Test {
         vm.stopPrank();
     }
 
-   // This is a known bug, if the price of the collateral collapses within seconds the invariant might break and the protocol become insolvent 
-   // function updateCollateralPrice(uint96 newPrice) public {
-   //     priceFeed.updateAnswer(int256(uint256(newPrice)));
-   // }
+    // This is a known bug, if the price of the collateral collapses within seconds the invariant might break and the protocol become insolvent
+    // function updateCollateralPrice(uint96 newPrice) public {
+    //     priceFeed.updateAnswer(int256(uint256(newPrice)));
+    // }
 
     function _getCollateralFromSeed(uint256 collateralSeed) internal view returns (ERC20Mock) {
         return ERC20Mock(tokenAdresses[collateralSeed % tokenAdresses.length]);
