@@ -10,7 +10,7 @@ import {DeployADCU} from "script/DeployADCU.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Handler} from "test/fuzz/Handler.t.sol";
 
-contract InvariantsTest is StdInvariant{
+contract InvariantsTest is StdInvariant {
     DeployADCU deployer;
     ADCUEngine engine;
     StableCoin adcu;
@@ -22,7 +22,7 @@ contract InvariantsTest is StdInvariant{
     function setUp() external {
         deployer = new DeployADCU();
         (adcu, engine, config) = deployer.run();
-        (,,weth,btc,) = config.activeNetwork();
+        (,, weth, btc,) = config.activeNetwork();
         handler = new Handler(engine, adcu);
         targetContract(address(handler));
     }
