@@ -18,7 +18,7 @@ contract DeployADCU is Script {
         tokenAdresses = [wETH, wBTC];
         priceFeedAddresses = [wETHUSDPriceFeed, wBTCUSDPriceFeed];
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast();
         StableCoin adcu = new StableCoin();
         ADCUEngine engine = new ADCUEngine(tokenAdresses, priceFeedAddresses, address(adcu));
         adcu.transferOwnership(address(engine));

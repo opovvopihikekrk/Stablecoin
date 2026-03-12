@@ -6,12 +6,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title StableCoin
- * @author Lucas Conesa
+ * @author Cemerian
  * Collateral: WETH & WBTC
  * Minting: Algorithmic
  * Stability: Pegged to USD
  * 
- * This is the contract meant to be governed by DSCEngine. This contract is just the ERC20 implementation
+ * This is the contract meant to be governed by ADCUEngine. This contract is just the ERC20 implementation
  * of the stablecoin system
 */
 
@@ -20,7 +20,7 @@ contract StableCoin is ERC20Burnable, Ownable{
     error StableCoin__NotEnoughFunds();
     error StableCoin__ToZeroAddress();
 
-    constructor() ERC20("CorreaUSD", "ADCU") Ownable(msg.sender){
+    constructor() ERC20("Algorithmic Decentralized Collaterlalized USD", "ADCU") Ownable(){
 
     }
 

@@ -12,12 +12,12 @@ contract HelperConfig is Script{
         address wBTCUSDPriceFeed;
         address wETH;
         address wBTC;
-        uint deployerKey;
+        uint256 deployerKey;
     }
 
     uint8 public constant DECIMALS = 8;
-    int public constant ETH_USD_PRICE = 1900e8;
-    int public constant BTC_USD_PRICE = 85000e8;
+    int256 public constant ETH_USD_PRICE = 1900e8;
+    int256 public constant BTC_USD_PRICE = 85000e8;
 
     NetworkConfig public activeNetwork;
 
@@ -37,7 +37,7 @@ contract HelperConfig is Script{
             wBTCUSDPriceFeed: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
             wETH: 0xdd13E55209Fd76AfE204dBda4007C227904f0a81,
             wBTC: 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063,
-            deployerKey: vm.envUint("PRIVATE_KEY")
+            deployerKey: 0
         });
     }
 

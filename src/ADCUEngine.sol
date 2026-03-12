@@ -2,21 +2,21 @@
 pragma solidity ^0.8.19;
 
 import {StableCoin} from "src/StableCoin.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {OracleLib} from "src/Libraries/OracleLib.sol";
 
 /**
  * @title ADCUEngine
- * @author Lucas Conesa
+ * @author Cemerian
  *
  * The system is designed to be as minimal as possible, and have the tokens mantain a
  * 1 token == $1 peg.
  * This stablecoin has the properties:
  * - Exogenous collateral
  * - Dollar pegged
- * - Algoritmically Stable
+ * - Algorithmically Stable
  *
  * It is similar to DAI if DAI had no governance, no fees, and was only backed by WETH and WBTC.
  *
@@ -30,7 +30,7 @@ import {OracleLib} from "src/Libraries/OracleLib.sol";
 contract ADCUEngine is ReentrancyGuard {
     //Errors
     error ADCUEngine__AmountIsZero();
-    error ADCUEngine_DifferentLengthForTokensAndPriceFeeds();
+    error ADCUEngine__DifferentLengthForTokensAndPriceFeeds();
     error ADCUEngine__TokenNotAllowed();
     error ADCUEngine__TransferFailed();
     error ADCUEngine__NeedMoreCollateral(uint256 healthFactor);
@@ -77,7 +77,7 @@ contract ADCUEngine is ReentrancyGuard {
     //Functions
     constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address ADCUaddress) {
         if (tokenAddresses.length != priceFeedAddresses.length) {
-            revert ADCUEngine_DifferentLengthForTokensAndPriceFeeds();
+            revert ADCUEngine__DifferentLengthForTokensAndPriceFeeds();
         }
 
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
@@ -127,7 +127,7 @@ contract ADCUEngine is ReentrancyGuard {
      * @param amountADCUToBurn The amount of ADCU to burn.
      * @notice this function will burn the ADCU and redeem the collateral in one transaction.
      */
-    function redeemCollateralForADCU(address tokenCollateralAddress, uint256 amountCollateral, uint amountADCUToBurn) external {
+    function redeemCollateralForADCU(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountADCUToBurn) external {
         burnADCU(amountADCUToBurn);
         redeemCollateral(tokenCollateralAddress, amountCollateral);
     }
@@ -148,7 +148,7 @@ contract ADCUEngine is ReentrancyGuard {
     /**
      * @notice follows CEI
      * @param amountADCUToMint The amount of ADCU to mint.
-     * @notice the must have more collaterall value than the minimum treshold.
+     * @notice they must have more collateral value than the minimum treshold.
      */
     function mintADCU(uint256 amountADCUToMint) public moreThanZero(amountADCUToMint) nonReentrant {
         s_ADCUMinted[msg.sender] += amountADCUToMint;
@@ -159,7 +159,7 @@ contract ADCUEngine is ReentrancyGuard {
         }
     }
 
-    function burnADCU(uint amount) public moreThanZero(amount){
+    function burnADCU(uint256 amount) public moreThanZero(amount){
         _burnADCU(msg.sender, msg.sender, amount);
         _revertIfHealthFactorIsBroken(msg.sender); //Might be removed
     }
@@ -173,18 +173,18 @@ contract ADCUEngine is ReentrancyGuard {
      * @notice The liquidator will get a liquidation bonus
      * @notice This function assumes that the protocol is overcollateralized
      */
-    function liquidate(address collateral, address user, uint debtToCover) external moreThanZero(debtToCover) nonReentrant{
-        uint initialHealthFactor = _healthFactor(user);
+    function liquidate(address collateral, address user, uint256 debtToCover) external moreThanZero(debtToCover) nonReentrant{
+        uint256 initialHealthFactor = _healthFactor(user);
         if(initialHealthFactor >= MIN_HEALTH_FACTOR) {
             revert ADCUEngine__HealthFactorOK();
         }
-        uint tokenAmountFromDebtCovered = getTokenAmountFromUSD(collateral, debtToCover);
-        uint bonusCollateral = (tokenAmountFromDebtCovered * LIQUIDATION_BONUS) / 100;
-        uint totalCollateralToRedeem = tokenAmountFromDebtCovered + bonusCollateral;
+        uint256 tokenAmountFromDebtCovered = getTokenAmountFromUSD(collateral, debtToCover);
+        uint256 bonusCollateral = (tokenAmountFromDebtCovered * LIQUIDATION_BONUS) / 100;
+        uint256 totalCollateralToRedeem = tokenAmountFromDebtCovered + bonusCollateral;
         _redeemCollateral(collateral, totalCollateralToRedeem, user, msg.sender);
         _burnADCU(user, msg.sender, debtToCover);
 
-        uint endingHealthFactor = _healthFactor(user);
+        uint256 endingHealthFactor = _healthFactor(user);
         if(endingHealthFactor < MIN_HEALTH_FACTOR) {
             revert ADCUEngine__HealthFactorNotImproved();
         }
@@ -228,8 +228,8 @@ contract ADCUEngine is ReentrancyGuard {
     /**
      * @dev Do not call unless the function calling it is checking for health factors being broken
      */
-    function _burnADCU(address liquidated, address liquidator, uint256 amount) private {
-        s_ADCUMinted[liquidated] -= amount;
+    function _burnADCU(address onBehalfOf, address liquidator, uint256 amount) private {
+        s_ADCUMinted[onBehalfOf] -= amount;
         bool burned = i_ADCU.transferFrom(liquidator, address(this), amount);
         if (!burned) {
             revert ADCUEngine__TransferFailed();
@@ -274,5 +274,8 @@ contract ADCUEngine is ReentrancyGuard {
 
     function getCollateralDeposited(address user, address token) external view returns (uint256) {
         return s_collateralDeposited[user][token];
+    }
+    function getPriceFeed(address token) external view returns (address) {
+        return s_priceFeeds[token];
     }
 }

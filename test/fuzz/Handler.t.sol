@@ -1,19 +1,24 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {ADCUEngine} from "src/ADCUEngine.sol";
 import {StableCoin} from "src/StableCoin.sol";
 import {ERC20Mock} from "test/mocks/ERC20Mock.sol";
+import {MockV3Aggregator} from "test/mocks/MockV3Aggregator.sol";
 
 contract Handler is Test{
     ADCUEngine engine;
     StableCoin adcu;
     address[] public tokenAdresses;
+    address[] usersWithCollateral;
+    MockV3Aggregator priceFeed;
     constructor(ADCUEngine _engine, StableCoin _adcu){
         engine = _engine;
         adcu = _adcu;
         tokenAdresses = engine.getCollateralTokens();
+
+        priceFeed = MockV3Aggregator(engine.getPriceFeed(tokenAdresses[0]));
     }
 
     function depositCollateral(uint collateralSeed, uint amount) public {
@@ -25,6 +30,7 @@ contract Handler is Test{
         collateral.approve(address(engine), amount);
         engine.depositCollateral(address(collateral), amount);
         vm.stopPrank();
+        usersWithCollateral.push(msg.sender);
     }
 
     function redeemCollateral(uint collateralSeed, uint amount) public {
@@ -36,15 +42,21 @@ contract Handler is Test{
         vm.stopPrank();
     }
 
-    function mintADCU(uint amount) public{
-        vm.startPrank(msg.sender);
-        (uint ADCUAmount, uint collateralValue) = engine.getAccountInformation(msg.sender);
+    function mintADCU(uint256 amount, uint256 seed) public{
+        if(usersWithCollateral.length == 0) return;
+        address user = usersWithCollateral[seed % usersWithCollateral.length];
+        vm.startPrank(user);
+        (uint ADCUAmount, uint collateralValue) = engine.getAccountInformation(user);
         int maxADCUToMint = int((collateralValue / 2) - ADCUAmount);
         if(maxADCUToMint <= 0) return;
         amount = bound(amount, 1, uint(maxADCUToMint));
         if(amount == 0) return;
         engine.mintADCU(amount);
         vm.stopPrank();
+    }
+
+    function updateCollateralPrice(uint96 newPrice) public {
+        priceFeed.updateAnswer(int256(uint256(newPrice)));
     }
 
     function _getCollateralFromSeed(uint collateralSeed) internal view returns (ERC20Mock) {

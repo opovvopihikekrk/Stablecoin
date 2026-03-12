@@ -50,20 +50,20 @@ contract ADCUEngineTest is Test {
         priceFeedAddresses[0] = ETHUSDPriceFeed;
         priceFeedAddresses[1] = BTCUSDPriceFeed; // Extra address to make it different length
 
-        vm.expectRevert(ADCUEngine.ADCUEngine_DifferentLengthForTokensAndPriceFeeds.selector);
+        vm.expectRevert(ADCUEngine.ADCUEngine__DifferentLengthForTokensAndPriceFeeds.selector);
         new ADCUEngine(tokenAddresses, priceFeedAddresses, address(adcu));
     }
 
     //Price tests
 
-    function testGetUsdValue() public view {
-        uint256 amount = 1e8; // 1 token with 8 decimals
-        uint256 expectedValue = 1900e8; // 1900 USD for 1 ETH
+    function testGetUsdValue() public {
+        uint256 amount = 10e18; // 1 token with 8 decimals
+        uint256 expectedValue = 19000e18; // 1900 USD for 1 ETH
         uint256 actualValue = engine.getUSDValue(WETH, amount); // Assuming 0 is the index for wETH
         assertEq(actualValue, expectedValue, "getUsdValue failed");
     }
 
-    function testGetTokenAmountFromUSD() public view {
+    function testGetTokenAmountFromUSD() public {
         uint256 amount = 1900e8; // 1900 USD
         uint256 expectedValue = 1e8; // 1 token with 8 decimals
         uint256 actualValue = engine.getTokenAmountFromUSD(WETH, amount); // Assuming 0 is the index for wETH
@@ -80,7 +80,7 @@ contract ADCUEngineTest is Test {
     }
 
     function testRevertsWithUnapprovedCollateral() public {
-        ERC20Mock token = new ERC20Mock("Juan Putero Token", "JPT", USER, INITIAL_WETH_BALANCE);
+        ERC20Mock token = new ERC20Mock("Random Token", "RAN", USER, INITIAL_WETH_BALANCE);
         vm.startPrank(USER);
         vm.expectRevert(ADCUEngine.ADCUEngine__TokenNotAllowed.selector);
         engine.depositCollateral(address(token), DEFAULT_COLLATERAL_AMOUNT);
@@ -172,15 +172,14 @@ contract ADCUEngineTest is Test {
         engine.mintADCU(MINT_AMOUNT);
         vm.stopPrank();
 
-        // Hacer que el usuario quede con un factor de salud bajo
-        dropPriceFeed(); // Simula una caída del precio
+        dropPriceFeed();
 
         vm.startPrank(LIQUIDATOR);
         ERC20Mock(WETH).approve(address(engine), DEFAULT_COLLATERAL_AMOUNT * 3);
         engine.depositCollateral(WETH, DEFAULT_COLLATERAL_AMOUNT * 3);
         engine.mintADCU(MINT_AMOUNT);
         adcu.approve(address(engine), MINT_AMOUNT);
-        engine.liquidate(WETH, USER, MINT_AMOUNT);
+        engine.liquidate(WETH, USER, MINT_AMOUNT/2);
         vm.stopPrank();
     }
 
@@ -197,7 +196,7 @@ contract ADCUEngineTest is Test {
 
     function dropPriceFeed() internal {
         
-        MockV3Aggregator(ETHUSDPriceFeed).updateAnswer(700e8); // Drops the price from 1900 to 700 USD
+        MockV3Aggregator(ETHUSDPriceFeed).updateAnswer(900e8); // Drops the price from 1900 to 700 USD
     }
 
 
